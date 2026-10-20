@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework><LangVersion>latest</LangVersion><AssemblyName>PclShell.DownloadRestore</AssemblyName><AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Api/Api.csproj" /><Reference Include="PresentationFramework" /><Reference Include="PresentationCore" /><Reference Include="WindowsBase" /><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" /></ItemGroup>
+</Project>

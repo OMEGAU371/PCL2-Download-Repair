@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework><OutputType>WinExe</OutputType><UseWindowsForms>true</UseWindowsForms><LangVersion>latest</LangVersion>
+    <AssemblyName>PclShell</AssemblyName><AssemblyTitle>PCL Shell 第三方插件启动器</AssemblyTitle><AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Api/Api.csproj" /><Reference Include="PresentationFramework" /><Reference Include="PresentationCore" /><Reference Include="WindowsBase" /><Reference Include="System.Web.Extensions" /><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" /></ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+artifacts/
+dist/
+logs/
+shell.json
+autoload-state.json
+*.user
+*.suo

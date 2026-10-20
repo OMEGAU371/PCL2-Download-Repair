@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework><OutputType>WinExe</OutputType><UseWindowsForms>true</UseWindowsForms><LangVersion>latest</LangVersion><AssemblyName>PCL下载助手</AssemblyName><AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath><ApplicationManifest>../Host/app.manifest</ApplicationManifest></PropertyGroup>
+  <ItemGroup><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" /></ItemGroup>
+</Project>

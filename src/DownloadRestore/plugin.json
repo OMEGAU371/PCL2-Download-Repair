@@ -1,0 +1,10 @@
+{
+  "id": "download-restore",
+  "name": "下载界面恢复",
+  "apiVersion": 1,
+  "assembly": "PclShell.DownloadRestore.dll",
+  "entryType": "PclShell.DownloadRestore.DownloadRestorePlugin",
+  "supportedVersions": ["2.99.0.0"],
+  "supportedTargetHashes": ["5b64d6d540c376390470cea3ab99d47661e8bca81be2ba647ea83e7d2e9428fa"],
+  "description": "在原窗口重接原版下载页的版本列表加载器"
+}
