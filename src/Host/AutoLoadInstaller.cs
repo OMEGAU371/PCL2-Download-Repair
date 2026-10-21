@@ -49,6 +49,7 @@ namespace PclShell {
             target=Path.GetFullPath(target);
             if(!File.Exists(target))throw new FileNotFoundException("原 PCL 程序不存在。");
             if(ManagerWindow.OriginalPclIsRunning())throw new InvalidOperationException("请先关闭 PCL，再安装自动加载。");
+            var packageHashes=PackageIntegrity.Verify(source);
             var metadata=Assembly.ReflectionOnlyLoad(File.ReadAllBytes(target));
             if(metadata.GetName().Name!="Plain Craft Launcher 2"||!metadata.ImageRuntimeVersion.StartsWith("v4.",StringComparison.Ordinal))throw new InvalidOperationException("请选择 .NET Framework 版本的原 PCL2.exe。此运行时尚不受加载器支持。");
             string config=target+".config",destination=Folder(target),stateFile=StateFile(target);
@@ -75,10 +76,12 @@ namespace PclShell {
             Register(doc);Directory.CreateDirectory(destination);
             // Copy dependencies before publishing the startup configuration. Never overwrite a running host.
             if(!string.Equals(Path.GetFullPath(source).TrimEnd('\\'),Path.GetFullPath(destination).TrimEnd('\\'),StringComparison.OrdinalIgnoreCase)){
-                foreach(var name in new[]{"PclShell.exe","PclShell.exe.config","PclShell.Api.dll","PclShell.Bootstrap.dll","loader-setup.exe","loader-setup.exe.config","install.bat","uninstall.bat","README.md","SECURITY.md","LICENSE","TESTING.md"})File.Copy(Path.Combine(source,name),Path.Combine(destination,name),true);
+                foreach(var name in new[]{"PclShell.exe","PclShell.exe.config","PclShell.Api.dll","PclShell.Bootstrap.dll","loader-setup.exe","loader-setup.exe.config","install.bat","uninstall.bat","README.md","SECURITY.md","LICENSE","TESTING.md","SHA256SUMS.txt"})File.Copy(Path.Combine(source,name),Path.Combine(destination,name),true);
                 CopyPluginTree(Path.Combine(source,"plugins"),Path.Combine(destination,"plugins"));
             }
+            PackageIntegrity.PrepareInstalledRuntime(destination,packageHashes);
             if(!File.Exists(bootstrap)||Files.Hash(bootstrap)!=Files.Hash(bootstrapSource))File.Copy(bootstrapSource,bootstrap,true);
+            PackageIntegrity.ClearVerifiedDownloadMark(bootstrap,packageHashes["PclShell.Bootstrap.dll"]);
             state.installedBootstrapHash=Files.Hash(bootstrapSource);
             var settingsFile=Path.Combine(destination,"shell.json");
             var settings=File.Exists(settingsFile)?Files.Json.Deserialize<ShellSettings>(File.ReadAllText(settingsFile)):new ShellSettings();settings.pclPath=target;

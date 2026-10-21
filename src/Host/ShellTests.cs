@@ -60,6 +60,7 @@ namespace PclShell {
             state=new InstallState {target=pretendPcl,hadConfig=false,originalBase64="",installedHash=Files.Hash(config)};File.WriteAllText(stateFile,Files.Json.Serialize(state));
             AutoLoadInstaller.Disable(pretendPcl,true);
             if(File.Exists(config)||!File.Exists(stateFile))throw new Exception("Temporary disable lost the full-uninstall backup");count++;
+            count+=PackageTests.Run(Path.Combine(testRoot,"package"));
             File.WriteAllText(Path.Combine(root,"self-test.json"),Files.Json.Serialize(new{success=true,tests=count}));
         }
     }
