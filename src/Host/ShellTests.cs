@@ -31,6 +31,35 @@ namespace PclShell {
             bool invalidRejected=false;try{AutoLoadInstaller.ReadConfiguration("<wrong/>");}catch(InvalidDataException){invalidRejected=true;}if(!invalidRejected)throw new Exception("Invalid configuration accepted");count++;
             if(Launcher.FindTarget(self,Path.GetTempPath())!=self)throw new Exception("Saved executable selection failed");count++;
             if(Launcher.FindTarget(null,Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString("N")))!=null)throw new Exception("Missing PCL reported as found");count++;
+            var testRoot=Path.Combine(root,"self-test-data",Guid.NewGuid().ToString("N"));
+            var pluginSource=Path.Combine(testRoot,"source");var pluginOutput=Path.Combine(testRoot,"copy");
+            Directory.CreateDirectory(Path.Combine(pluginSource,"first","assets"));Directory.CreateDirectory(Path.Combine(pluginSource,"second"));
+            File.WriteAllText(Path.Combine(pluginSource,"first","plugin.json"),"first");File.WriteAllText(Path.Combine(pluginSource,"first","assets","data.txt"),"asset");File.WriteAllText(Path.Combine(pluginSource,"second","plugin.json"),"second");
+            AutoLoadInstaller.CopyPluginTree(pluginSource,pluginOutput);
+            if(File.ReadAllText(Path.Combine(pluginOutput,"first","assets","data.txt"))!="asset")throw new Exception("Plugin asset was not preserved");count++;
+            if(Directory.GetFiles(pluginOutput,"*",SearchOption.AllDirectories).Length!=3)throw new Exception("Multiple plugins were not copied");count++;
+            var pretendPcl=Path.Combine(testRoot,"PCL2.exe");File.WriteAllText(pretendPcl,"self-test");
+            if(AutoLoadInstaller.Folder(pretendPcl)!=Path.Combine(testRoot,"PCL","plugins-loader"))throw new Exception("Loader installation escaped its dedicated directory");count++;
+            Directory.CreateDirectory(Path.Combine(testRoot,"PCL"));
+            if(Launcher.FindTarget(null,Path.Combine(testRoot,"PCL"))!=pretendPcl)throw new Exception("Installed loader did not find parent PCL");count++;
+            var config=pretendPcl+".config";var stateFile=AutoLoadInstaller.StateFile(pretendPcl);Directory.CreateDirectory(AutoLoadInstaller.Folder(pretendPcl));
+            var registered=AutoLoadInstaller.ReadConfiguration(null);AutoLoadInstaller.Register(registered);File.WriteAllText(config,registered.OuterXml);
+            var state=new InstallState {target=pretendPcl,hadConfig=false,originalBase64="",installedHash=Files.Hash(config)};
+            File.WriteAllText(stateFile,Files.Json.Serialize(state));AutoLoadInstaller.Disable(pretendPcl);
+            if(File.Exists(config)||File.Exists(stateFile))throw new Exception("Uninstall failed to restore absence of original config");count++;
+            var original=System.Text.Encoding.UTF8.GetBytes("<configuration><!-- original bytes --><startup /></configuration>");
+            registered=AutoLoadInstaller.ReadConfiguration(System.Text.Encoding.UTF8.GetString(original));AutoLoadInstaller.Register(registered);File.WriteAllText(config,registered.OuterXml);
+            state=new InstallState {target=pretendPcl,hadConfig=true,originalBase64=Convert.ToBase64String(original),installedHash=Files.Hash(config)};
+            File.WriteAllText(stateFile,Files.Json.Serialize(state));AutoLoadInstaller.Disable(pretendPcl);
+            if(!System.Linq.Enumerable.SequenceEqual(original,File.ReadAllBytes(config)))throw new Exception("Original config bytes were not restored");count++;
+            AutoLoadInstaller.Register(registered);File.WriteAllText(config,registered.OuterXml);state.installedHash=Files.Hash(config);File.WriteAllText(stateFile,Files.Json.Serialize(state));
+            var keep=registered.CreateElement("appSettings");keep.SetAttribute("changed","keep");registered.DocumentElement.AppendChild(keep);File.WriteAllText(config,registered.OuterXml);
+            AutoLoadInstaller.Disable(pretendPcl);var restored=AutoLoadInstaller.ReadConfiguration(File.ReadAllText(config));
+            if(restored.SelectSingleNode("/configuration/appSettings")==null||restored.SelectSingleNode("/configuration/runtime/appDomainManagerType")!=null)throw new Exception("Post-install config changes were not preserved");count++;
+            registered=AutoLoadInstaller.ReadConfiguration(null);AutoLoadInstaller.Register(registered);File.WriteAllText(config,registered.OuterXml);
+            state=new InstallState {target=pretendPcl,hadConfig=false,originalBase64="",installedHash=Files.Hash(config)};File.WriteAllText(stateFile,Files.Json.Serialize(state));
+            AutoLoadInstaller.Disable(pretendPcl,true);
+            if(File.Exists(config)||!File.Exists(stateFile))throw new Exception("Temporary disable lost the full-uninstall backup");count++;
             File.WriteAllText(Path.Combine(root,"self-test.json"),Files.Json.Serialize(new{success=true,tests=count}));
         }
     }

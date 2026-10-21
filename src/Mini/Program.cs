@@ -1,15 +1,23 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 internal static class Program {
     [STAThread]
-    static int Main(){
+    static int Main(string[] args){
         try{
-            var host=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"PCL-Shell-Auto","PclShell.exe");
-            if(!File.Exists(host))throw new FileNotFoundException("请先完整解压压缩包，保留 PCL-Shell-Auto 文件夹与本程序放在一起。\n然后把它们放到 PCL2.exe 旁边。");
-            Process.Start(new ProcessStartInfo(host,"--quick"){WorkingDirectory=Path.GetDirectoryName(host)});return 0;
+            if(args.Length>0&&args[0]=="--cleanup")return Cleanup.Run(args);
+            var host=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"PclShell.exe");
+            if(!File.Exists(host))throw new FileNotFoundException("请完整解压 plugins-loader 文件夹，并把它放到 PCL2.exe 旁边。");
+            bool setup=args.Length>0&&(args[0]=="--install"||args[0]=="--uninstall");
+            string arguments=setup?string.Join(" ",args.Select(Quote)):"--quick";
+            using(var process=Process.Start(new ProcessStartInfo(host,arguments){WorkingDirectory=Path.GetDirectoryName(host),UseShellExecute=false})){
+                if(setup){process.WaitForExit();return process.ExitCode;}
+            }
+            return 0;
         }catch(Exception e){MessageBox.Show(e.Message,"PCL 下载助手",MessageBoxButtons.OK,MessageBoxIcon.Information);return 1;}
     }
+    static string Quote(string value){return "\""+value.Replace("\\\"","\\\\\"").TrimEnd('\\')+"\"";}
 }

@@ -14,6 +14,8 @@ namespace PclShell {
             // This optional harness is restricted again by FixtureValidation's compiled registry marker.
             var validation=Environment.GetEnvironmentVariable("PCL_SHELL_FIXTURE_RESULT");
             bool fixture=!string.IsNullOrEmpty(validation)&&hash=="cddc8482003c4dbf2aff8e67f6a20cd9a61801abe37138e2982a6671e02a51d8";
+            var statusDirectory=Path.Combine(shellDirectory,"logs");Directory.CreateDirectory(statusDirectory);
+            File.WriteAllText(Path.Combine(statusDirectory,"loader-status.json"),Files.Json.Serialize(new{targetSha256=hash,compatiblePlugins=selected.Length,bypassed=bypass,checkedAt=DateTime.Now.ToString("O")}));
             if(selected.Length==0&&!fixture)return;
             var logs=fixture?validation:Path.Combine(shellDirectory,"logs","direct-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
             PluginRuntime.Schedule(new RunOptions {Target=target,ShellDirectory=shellDirectory,ExpectedHash=hash,DiagnosticsDirectory=logs,PluginManifestFiles=selected.Select(p=>Path.Combine(p.Directory,"plugin.json")).ToArray(),ValidateFixture=fixture});

@@ -6,11 +6,24 @@ using System.Reflection;
 
 namespace PclShell.Bootstrap {
     public sealed class BootstrapManager : AppDomainManager {
+        int attached;
         public override void InitializeNewDomain(AppDomainSetup info) {
             base.InitializeNewDomain(info);
             if(!AppDomain.CurrentDomain.IsDefaultAppDomain())return;
+            // Let CLR establish the application's compatibility context and STA entry thread first.
+            // Touching System.IO during early domain initialization can cache legacy path handling.
+            AppDomain.CurrentDomain.AssemblyLoad+=OnAssemblyLoad;
+            if(AppDomain.CurrentDomain.GetAssemblies().Any(a=>a.GetName().Name=="PresentationFramework"))Attach();
+        }
+        void OnAssemblyLoad(object sender,AssemblyLoadEventArgs args){
+            if(args.LoadedAssembly.GetName().Name=="PresentationFramework")Attach();
+        }
+        void Attach(){
+            if(System.Threading.Interlocked.Exchange(ref attached,1)!=0)return;
+            AppDomain.CurrentDomain.AssemblyLoad-=OnAssemblyLoad;
             string root=Path.GetDirectoryName(typeof(BootstrapManager).Assembly.Location);
-            string shell=Path.Combine(root,"PCL-Shell-Auto");
+            string shell=Path.Combine(root,"PCL","plugins-loader");
+            if(!File.Exists(Path.Combine(shell,"PclShell.exe")))shell=Path.Combine(root,"PCL-Shell-Auto");
             try {
                 string config=AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
                 if(!config.EndsWith(".exe.config",StringComparison.OrdinalIgnoreCase))return;

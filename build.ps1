@@ -14,20 +14,20 @@ try {
     $OutputRoot=[IO.Path]::GetFullPath($OutputRoot)
     New-Item -ItemType Directory -Path $OutputRoot -Force|Out-Null
     $staging=Join-Path $OutputRoot ('staging-'+[Guid]::NewGuid().ToString('N'))
-    $hostDirectory=Join-Path $staging 'PCL-Shell-Auto'
-    $pluginDirectory=Join-Path $hostDirectory 'plugins/download-restore'
+    $hostDirectory=Join-Path $staging 'plugins-loader'
+    $pluginDirectory=Join-Path $hostDirectory 'plugins/download-repairer'
     New-Item -ItemType Directory -Path $pluginDirectory -Force|Out-Null
     foreach($name in @('PclShell.exe','PclShell.exe.config','PclShell.Api.dll')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('src/Host/bin/Release/'+$name)) -Destination $hostDirectory}
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'src/Bootstrap/bin/Release/PclShell.Bootstrap.dll') -Destination $hostDirectory
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'src/DownloadRestore/bin/Release/PclShell.DownloadRestore.dll') -Destination $pluginDirectory
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'src/DownloadRestore/plugin.json') -Destination $pluginDirectory
-    foreach($name in @('PCL下载助手.exe','PCL下载助手.exe.config')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('src/Mini/bin/Release/'+$name)) -Destination $staging}
-    foreach($name in @('README.md','SECURITY.md','LICENSE','TESTING.md')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination $staging}
-    $hashLines=Get-ChildItem -LiteralPath $staging -File -Recurse|Sort-Object FullName|ForEach-Object{
-        $relative=$_.FullName.Substring($staging.Length+1).Replace('\','/')
+    foreach($name in @('loader-setup.exe','loader-setup.exe.config')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('src/Mini/bin/Release/'+$name)) -Destination $hostDirectory}
+    foreach($name in @('README.md','SECURITY.md','LICENSE','TESTING.md','install.bat','uninstall.bat')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination $hostDirectory}
+    $hashLines=Get-ChildItem -LiteralPath $hostDirectory -File -Recurse|Sort-Object FullName|ForEach-Object{
+        $relative=$_.FullName.Substring($hostDirectory.Length+1).Replace('\','/')
         (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$relative
     }
-    [IO.File]::WriteAllLines((Join-Path $staging 'SHA256SUMS.txt'),$hashLines,[Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllLines((Join-Path $hostDirectory 'SHA256SUMS.txt'),$hashLines,[Text.UTF8Encoding]::new($false))
     $zip=Join-Path $OutputRoot 'PCL2-Download-Repair.zip'
     Compress-Archive -Path (Join-Path $staging '*') -DestinationPath $zip -Force
     $zipHash=(Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()+'  PCL2-Download-Repair.zip'

@@ -21,6 +21,7 @@ namespace PclShell {
                 if(args.Length>=3 && args[0]=="--probe-metadata") { MetadataProbe.Run(Path.GetFullPath(args[1]),args[2]); return 0; }
                 if(args.Length>0 && args[0]=="--self-test") { ShellTests.Run(); return 0; }
                 Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
+                if(args.Length>0&&(args[0]=="--install"||args[0]=="--uninstall"))return InstallerCommands.Run(args);
                 if(args.Length>0 && args[0]=="--quick"){Application.Run(new QuickWindow());return 0;}
                 Application.Run(new ManagerWindow()); return 0;
             } catch(Exception e) {
